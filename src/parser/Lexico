@@ -1,0 +1,43 @@
+
+package parser;
+import java_cup.runtime.Symbol; 
+
+%% 
+%class Lexico
+%public 
+%line 
+%char 
+%cup 
+%unicode
+%ignorecase
+
+%{
+    private Symbol symbol(int type) {
+        return new Symbol(type, yyline, yychar, yytext());
+    }
+    private Symbol symbol(int type, Object value) {
+        return new Symbol(type, yyline, yychar, value);
+    }
+%}
+
+ 
+BLANCOS=[ \r\t]+
+ID=[A-Za-z]+["_"0-9A-Za-z]*
+%%
+
+"int" {return new Symbol(sym.T_INT,yyline,yychar, yytext());} 
+"char" {return new Symbol(sym.T_CHAR,yyline,yychar, yytext());} 
+"bool" {return new Symbol(sym.T_BOOL,yyline,yychar, yytext());} 
+
+";" {return new Symbol(sym.PTCOMA,yyline,yychar, yytext());} 
+"{" {return new Symbol(sym.LLAVE_IZQ,yyline,yychar, yytext());} 
+"}" {return new Symbol(sym.LLAVE_DER,yyline,yychar, yytext());} 
+
+\n {yychar=1;}
+
+{BLANCOS} {} 
+{ID} {return new Symbol(sym.IDENTIFICADOR,yyline,yychar, yytext());}
+
+. {
+    System.err.println("Este es un error lexico: "+yytext()+", en la linea: "+yyline+", en la columna: "+yychar);
+}

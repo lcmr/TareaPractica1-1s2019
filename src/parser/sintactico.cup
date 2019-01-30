@@ -1,0 +1,79 @@
+package parser; 
+
+import arbol.Arbol;
+import arbol.Ambito;
+import arbol.Declaracion;
+import arbol.Instruccion;
+import arbol.Simbolo.Tipo;
+import arbol.TablaDeSimbolos;
+import java.util.LinkedList;
+import java_cup.runtime.*;
+
+parser code 
+{:
+    /**
+     * Variable en la que se almacena el arbol de sintaxis abstracta que se 
+     * genera luego del analisis sintáctico.
+     */
+    public Arbol AST;
+    /**
+     * Método al que se llama automáticamente ante algún error sintactico.
+     **/ 
+    public void syntax_error(Symbol s){ 
+            System.err.println("Error Sintáctico en la Línea " + (s.left) +" Columna "+s.right+ ". No se esperaba este componente: " +s.value+"."); 
+    } 
+    /**
+     * Método al que se llama en el momento en que ya no es posible una recuperación de errores.
+     **/ 
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+            System.err.println("Error síntactico irrecuperable en la Línea " + (s.left)+ " Columna "+s.right+". Componente " + s.value + " no reconocido."); 
+    }  
+    /**
+     * Método que devuelve el AST que se generó después de realizar el análisis sintáctico. 
+     * @return árbol de sintaxis abstacta que será utilizado posteriormente en la ejecución.
+     */
+    public Arbol getAST() {
+        return AST;
+    }
+:} 
+
+terminal String PTCOMA,LLAVE_IZQ,LLAVE_DER;
+terminal String T_INT,T_CHAR,T_BOOL;
+terminal String IDENTIFICADOR;
+
+non terminal ini;
+non terminal LinkedList<Instruccion> instrucciones;
+non terminal LinkedList<Instruccion> ambitos;
+non terminal Instruccion instruccion;
+non terminal Arbol ambito;
+non terminal String tipo;
+
+start with ini; 
+
+ini ::= ambitos:a {:
+    //se guarda el AST, que es la lista principal de instrucciones en la variable
+    //AST que se definió dentro del parser
+    parser.AST=new Arbol(a);
+:};
+
+ambitos::= LLAVE_IZQ instrucciones:a{:RESULT=a;:} LLAVE_DER
+;
+
+instrucciones ::= 
+   instrucciones:a instruccion:b{:RESULT=a; RESULT.add(b);:}
+ | instruccion:a{:RESULT=new LinkedList<>(); RESULT.add(a);:}
+; 
+
+instruccion ::= 
+   tipo:a IDENTIFICADOR:b PTCOMA   {:RESULT=new Declaracion(b,a);:}
+ | ambito:a {: RESULT = a;:}
+;
+
+ambito::= LLAVE_IZQ instrucciones:a{:RESULT= new Arbol(a);:} LLAVE_DER
+;
+
+tipo ::= 
+   T_INT:a {:RESULT=a;:}
+ | T_CHAR:a  {:RESULT=a;:}
+ | T_BOOL:a {:RESULT=a;:}
+;
